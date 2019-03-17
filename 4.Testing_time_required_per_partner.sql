@@ -1,4 +1,6 @@
 
+
+
 select 
 dy.partner_name
 -- ,case when mop_category in (12,13,14,15) then 'PI'
@@ -27,7 +29,7 @@ inner join
 	and partner_entitlement_id is null -- not bundle
 	and partner_offer_id is null -- not PPP
 	and partner_promotion_id is null -- not PPP
-	and utc_date between 20190201 and 20190228
+	and utc_date between nf_dateadd(20190314,-7*8) and 20190314
 	and input_flow='tenfootSignUp'
 	and partner_name not in ('ORANGE_POL','ORANGE', 'TALKTALK','VODAFONE','TELECOMITALIA','STARHUB' ---legacy client-driven partners
 							 ,'FETCH_TV','SONY','ROKU','LG','LG_PH','REFERENCE','VESTEL')   -- CE devices
@@ -36,5 +38,6 @@ inner join
 on ab.visitor_device_id=dy.input_visitor_device_id
 	and ab.allocation_region_date between nf_dateadd(utc_date,-1) and nf_dateadd(utc_date,+1)
 where test_id = 8101 
-and allocation_region_date between 20190201 and 20190228
+and allocation_region_date between nf_dateadd(20190314,-7*8) and 20190314
 group by 1;
+
