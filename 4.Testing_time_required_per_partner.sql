@@ -5,9 +5,9 @@ dy.partner_name
 --      when mop_category in (-9,-1) then 'unknown'
 --      else 'Netflix_MOP' end as mop_cat
 ,count(distinct visitor_device_id) n_allocs
-,count(distinct if(membership_status = 2, visitor_device_id, NULL)) n_current_members
-,count(distinct if(membership_status = 2, visitor_device_id, NULL))*1.0/count(distinct visitor_device_id) as CM_si_rate
-,count(distinct visitor_device_id) - count(distinct if(membership_status = 2, visitor_device_id, NULL)) n_adjusted
+,count(distinct (case when membership_status = 2 then visitor_device_id end)) n_current_members
+,count(distinct (case when membership_status = 2 then visitor_device_id end))*1.0/count(distinct visitor_device_id) as CM_si_rate
+,count(distinct visitor_device_id) - count(distinct (case when membership_status = 2 then visitor_device_id end)) n_adjusted
 ,count(distinct if(signup_utc_ts_ms is not null, visitor_device_id, NULL)) overall_signups
 ,count(distinct (case when mop_category in (12,13,14,15) and signup_utc_ts_ms is not null then visitor_device_id end)) as PI_signup
 ,cast(count(distinct if(signup_utc_ts_ms is not null, visitor_device_id, NULL)) as double)/(count(distinct visitor_device_id)  - count(distinct if(membership_status = 2, visitor_device_id, NULL))) signup_rate
@@ -37,5 +37,4 @@ on ab.visitor_device_id=dy.input_visitor_device_id
 	and ab.allocation_region_date between nf_dateadd(utc_date,-1) and nf_dateadd(utc_date,+1)
 where test_id = 8101 
 and allocation_region_date between 20190201 and 20190228
-and signup_utc_ts_ms is not null
 group by 1;
