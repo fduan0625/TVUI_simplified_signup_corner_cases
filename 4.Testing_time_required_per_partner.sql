@@ -1,9 +1,6 @@
 
-
-
 select 
-dy.partner_name
--- ,case when mop_category in (12,13,14,15) then 'PI'
+dy.partner_name-- ,case when mop_category in (12,13,14,15) then 'PI'
 --      when mop_category in (-9,-1) then 'unknown'
 --      else 'Netflix_MOP' end as mop_cat
 ,count(distinct visitor_device_id) n_allocs
