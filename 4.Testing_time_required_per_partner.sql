@@ -1,13 +1,15 @@
 
 select 
 dy.partner_name
-,case when mop_category in (12,13,14,15) then 'PI'
-     when mop_category in (-9,-1) then 'unknown'
-     else 'Netflix_MOP' end as mop_cat
+-- ,case when mop_category in (12,13,14,15) then 'PI'
+--      when mop_category in (-9,-1) then 'unknown'
+--      else 'Netflix_MOP' end as mop_cat
 ,count(distinct visitor_device_id) n_allocs
 ,count(distinct if(membership_status = 2, visitor_device_id, NULL)) n_current_members
+,count(distinct if(membership_status = 2, visitor_device_id, NULL))*1.0/count(distinct visitor_device_id) as CM_si_rate
 ,count(distinct visitor_device_id) - count(distinct if(membership_status = 2, visitor_device_id, NULL)) n_adjusted
 ,count(distinct if(signup_utc_ts_ms is not null, visitor_device_id, NULL)) overall_signups
+,count(distinct (case when mop_category in (12,13,14,15) and signup_utc_ts_ms is not null then visitor_device_id end)) as PI_signup
 ,cast(count(distinct if(signup_utc_ts_ms is not null, visitor_device_id, NULL)) as double)/(count(distinct visitor_device_id)  - count(distinct if(membership_status = 2, visitor_device_id, NULL))) signup_rate
 from dse.ab_nm_alloc_f ab
 inner join 
@@ -32,7 +34,8 @@ inner join
 
 	)dy
 on ab.visitor_device_id=dy.input_visitor_device_id
-	and ab.allocation_region_date between nf_dateadd(dy.utc_date,-1) and nf_dateadd(dy.utc_date,+1)
+	and ab.allocation_region_date between nf_dateadd(utc_date,-1) and nf_dateadd(utc_date,+1)
 where test_id = 8101 
 and allocation_region_date between 20190201 and 20190228
-group by 1,2;
+and signup_utc_ts_ms is not null
+group by 1;
