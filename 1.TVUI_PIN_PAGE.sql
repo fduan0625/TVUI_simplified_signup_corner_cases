@@ -129,3 +129,49 @@ from fduan.MVPD_PI_PIN a
 group by 1;
 
 
+                 
+-- MVPD PIN screen drop off            
+with pin_partner_signups as (
+    select
+        dateint as dateint,
+        other_properties['billing_partner'] as billing_partner,
+        other_properties['billing_partner_handle'] as billing_partner_handle
+    from account_events
+    where dateint >= 20190301
+    and other_properties['event_type'] = 'CREATE_MEMBERSHIP'
+    and other_properties['caller_app_name'] = 'dynecom'
+    and other_properties['billing_partner'] in (
+        'ALTICE_HOT',
+        'AUSSIE_BROADBAND',
+        'BT_INTPAY',
+        'COMCAST',
+        'COMCAST_COX',
+        'COMCAST_SHAW',
+        'KPN',
+        'PCCW',
+        'PROXIMUS',
+        'RETAIL',
+        'TELEFONICA_MOVISTAR_COLOMBIA',
+        'TELEFONICA_MOVISTAR_PERU')
+)
+select 
+    pps.billing_partner,
+    pps.dateint,
+    count(distinct pps.billing_partner_handle) as uniq_pai_signup_count,
+    count(distinct dee.pin_shown_pai) as uniq_pai_signup_with_pin_count,
+    ((count(distinct dee.pin_shown_pai) * 1.0) / (count(distinct pps.billing_partner_handle) * 1.0)) * 100 as signups_with_pin_percent
+from pin_partner_signups pps
+left outer join (
+    select 
+        other_properties['partner.name'] as partner_name,
+        other_properties['partner.pai'] as pin_shown_pai
+    from dynecom_execution_events 
+    where dateint >= 20190301
+    and other_properties['input.flow'] = 'tenfootSignUp'
+    and other_properties['output.step'] = 'PAYMENTPIN'
+    and other_properties['partner.name'] is not null
+    ) dee
+on pps.billing_partner = dee.partner_name
+and pps.billing_partner_handle = dee.pin_shown_pai
+group by 1, 2
+order by 1, 2
